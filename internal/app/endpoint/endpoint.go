@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	. "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
+	types "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,8 +15,8 @@ type Endpoint struct {
 }
 
 type Service interface {
-	Post(URL string) (*ShortURL, error)
-	Get(ID string) (*ShortURL, error)
+	Post(URL string) (*types.ShortURL, error)
+	Get(ID string) (*types.ShortURL, error)
 }
 
 func New(s Service) *Endpoint {
@@ -52,8 +52,8 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shortURL := su.Short
-	if ReturnShortWithHost {
-		shortURL = OurHost + shortURL
+	if types.ReturnShortWithHost {
+		shortURL = types.OurHost + shortURL
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))

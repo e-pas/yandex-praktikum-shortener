@@ -4,28 +4,28 @@ import (
 	"math/rand"
 	"net/url"
 
-	. "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
+	types "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
 )
 
 type Service struct {
-	urls map[string]*ShortURL
+	urls map[string]*types.ShortURL
 }
 
 func New() *Service {
 	s := &Service{}
-	s.urls = make(map[string]*ShortURL)
+	s.urls = make(map[string]*types.ShortURL)
 	return s
 }
 
-func (s *Service) Post(URL string) (*ShortURL, error) {
+func (s *Service) Post(URL string) (*types.ShortURL, error) {
 	if len(URL) == 0 {
-		return nil, ErrEmptyReqBody
+		return nil, types.ErrEmptyReqBody
 	}
 	if !s.isURLok(URL) {
-		return nil, ErrURLNotCorrect
+		return nil, types.ErrURLNotCorrect
 	}
 
-	newURL := &ShortURL{
+	newURL := &types.ShortURL{
 		Short: s.GetRandStr(),
 		URL:   URL,
 	}
@@ -38,10 +38,10 @@ func (s *Service) Post(URL string) (*ShortURL, error) {
 	return newURL, nil
 }
 
-func (s *Service) Get(ID string) (*ShortURL, error) {
+func (s *Service) Get(ID string) (*types.ShortURL, error) {
 	recURL, ok := s.urls[ID]
 	if !ok {
-		return nil, ErrNoSuchRecord
+		return nil, types.ErrNoSuchRecord
 	}
 	return recURL, nil
 }
@@ -50,8 +50,8 @@ func (s *Service) GetRandStr() string {
 
 	var availChars = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	res := make([]byte, LenShortURL)
-	for ik := 0; ik < LenShortURL; ik++ {
+	res := make([]byte, types.LenShortURL)
+	for ik := 0; ik < types.LenShortURL; ik++ {
 		res[ik] = availChars[rand.Intn(len(availChars))]
 	}
 
