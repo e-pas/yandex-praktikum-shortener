@@ -45,8 +45,8 @@ func endpointPostTest(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.NotEmpty(t, resp.Body)
 
-		defer resp.Body.Close()
 		url, err := io.ReadAll(resp.Body)
+		defer resp.Body.Close()
 		assert.Nil(t, err)
 		assert.NotEmpty(t, url)
 		pairs[ik].Short = string(url)
@@ -79,8 +79,8 @@ func endpointPostTest(t *testing.T) {
 		assert.Equal(t, wt.retStatus, resp.StatusCode)
 		if len(wt.retBody) > 0 {
 			assert.NotEmpty(t, resp.Body)
-			defer resp.Body.Close()
 			respBody, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
 			assert.Nil(t, err)
 			assert.Contains(t, string(respBody), wt.retBody)
 		}
@@ -102,6 +102,7 @@ func endpointGetTest(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, resp.StatusCode, http.StatusTemporaryRedirect)
 		assert.Equal(t, pairs[ik].URL, resp.Header.Get("Location"))
+		defer resp.Body.Close()
 	}
 
 	wrongTests := []struct {
@@ -126,8 +127,8 @@ func endpointGetTest(t *testing.T) {
 		assert.Equal(t, wt.retStatus, resp.StatusCode)
 		if len(wt.retBody) > 0 {
 			assert.NotEmpty(t, resp.Body)
-			defer resp.Body.Close()
 			respBody, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
 			assert.Nil(t, err)
 			assert.Contains(t, string(respBody), wt.retBody)
 		}
