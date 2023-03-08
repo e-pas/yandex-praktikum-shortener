@@ -12,6 +12,6 @@ const OurHost = "http://localhost:8080/"
 const ReturnShortWithHost = true
 
 var ErrNoSuchRecord = errors.New("no such record")
-var ErrInvelidReqBody = errors.New("invalid request body")
+var ErrInvalidReqBody = errors.New("invalid request body")
 var ErrEmptyReqBody = errors.New("empty request body")
 var ErrURLNotCorrect = errors.New("given url is not correct")

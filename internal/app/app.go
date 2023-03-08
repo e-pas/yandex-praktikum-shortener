@@ -24,7 +24,7 @@ func New() (*App, error) {
 	a.r = chi.NewRouter()
 	a.r.Use(middleware.RequestID)
 	a.r.Use(middleware.RealIP)
-	a.r.Use(middleware.Logger)
+	//	a.r.Use(middleware.Logger)
 	a.r.Use(middleware.Recoverer)
 
 	a.r.Get("/{id}", a.e.Get)
