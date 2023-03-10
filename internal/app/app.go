@@ -1,7 +1,7 @@
 package app
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/endpoint"
@@ -24,7 +24,7 @@ func New() (*App, error) {
 	a.r = chi.NewRouter()
 	a.r.Use(middleware.RequestID)
 	a.r.Use(middleware.RealIP)
-	//	a.r.Use(middleware.Logger)
+	a.r.Use(middleware.Logger)
 	a.r.Use(middleware.Recoverer)
 
 	a.r.Get("/{id}", a.e.Get)
@@ -34,10 +34,7 @@ func New() (*App, error) {
 }
 
 func (a *App) Run() error {
-	fmt.Println("service running")
+	log.Println("service running")
 	err := http.ListenAndServe(":8080", a.r)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }

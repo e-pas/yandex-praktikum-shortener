@@ -11,15 +11,15 @@ import (
 )
 
 type Endpoint struct {
-	s Service
+	s service
 }
 
-type Service interface {
-	Post(URL string) (*types.ShortURL, error)
-	Get(ID string) (*types.ShortURL, error)
+type service interface {
+	Post(URL string) (string, error)
+	Get(ID string) (string, error)
 }
 
-func New(s Service) *Endpoint {
+func New(s service) *Endpoint {
 	e := &Endpoint{}
 	e.s = s
 	return e
@@ -27,13 +27,13 @@ func New(s Service) *Endpoint {
 
 func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 	urlID := chi.URLParam(r, "id")
-	su, err := e.s.Get(urlID)
+	longURL, err := e.s.Get(urlID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
 	}
-	w.Header().Set("Location", su.URL)
+	w.Header().Set("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
@@ -44,18 +44,16 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 		log.Print(err.Error())
 		return
 	}
-	su, err := e.s.Post(string(bodyStr))
+	shortURL, err := e.s.Post(string(bodyStr))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
 	}
 
-	shortURL := su.Short
 	if types.ReturnShortWithHost {
 		shortURL = types.OurHost + shortURL
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
-	//	url := chi.URLParam(r, "url")
 }

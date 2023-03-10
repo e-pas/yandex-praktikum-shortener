@@ -17,36 +17,42 @@ func New() *Service {
 	return s
 }
 
-func (s *Service) Post(URL string) (*types.ShortURL, error) {
+func (s *Service) Post(URL string) (string, error) {
 	if len(URL) == 0 {
-		return nil, types.ErrEmptyReqBody
+		return "", types.ErrEmptyReqBody
 	}
-	if !s.isURLok(URL) {
-		return nil, types.ErrURLNotCorrect
+	if !isURLok(URL) {
+		return "", types.ErrURLNotCorrect
 	}
 
 	newURL := &types.ShortURL{
-		Short: s.GetRandStr(),
+		Short: GetRandStr(),
 		URL:   URL,
 	}
-	// check: if same short url already exists, rerandomize it again.
-	for _, ok := s.urls[newURL.Short]; ok; {
-		newURL.Short = s.GetRandStr()
+	// check: if same id for url already exists, rerandomize it again.
+	const maxTry = 10
+	ik := 0
+	for _, ok := s.urls[newURL.Short]; ok && ik < maxTry; {
+		ik++
+		newURL.Short = GetRandStr()
+	}
+	if ik == maxTry {
+		return "", types.ErrNoFreeIDs
 	}
 
 	s.urls[newURL.Short] = newURL
-	return newURL, nil
+	return newURL.Short, nil
 }
 
-func (s *Service) Get(ID string) (*types.ShortURL, error) {
+func (s *Service) Get(ID string) (string, error) {
 	recURL, ok := s.urls[ID]
 	if !ok {
-		return nil, types.ErrNoSuchRecord
+		return "", types.ErrNoSuchRecord
 	}
-	return recURL, nil
+	return recURL.URL, nil
 }
 
-func (s *Service) GetRandStr() string {
+func GetRandStr() string {
 
 	var availChars = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
@@ -58,7 +64,7 @@ func (s *Service) GetRandStr() string {
 	return string(res)
 }
 
-func (s *Service) isURLok(URL string) bool {
+func isURLok(URL string) bool {
 	u, err := url.Parse(URL)
 	if err != nil || u.Scheme == "" || u.Host == "" {
 		return false
