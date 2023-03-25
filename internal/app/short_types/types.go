@@ -16,5 +16,5 @@ var (
 	ErrInvalidReqBody = errors.New("invalid request body")
 	ErrEmptyReqBody   = errors.New("empty request body")
 	ErrURLNotCorrect  = errors.New("given url is not correct")
-	ErrNoFreeIDs      = errors.New("No free short url.")
+	ErrNoFreeIDs      = errors.New("no free short url")
 )
