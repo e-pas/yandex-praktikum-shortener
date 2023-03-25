@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -54,6 +55,53 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 	if types.ReturnShortWithHost {
 		shortURL = types.OurHost + shortURL
 	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
+}
+
+func (e *Endpoint) PostApi(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Url string `json:"url"`
+	}
+	type result struct {
+		Result string `json:"result"`
+	}
+
+	bodyStr, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
+
+	req := request{}
+	err = json.Unmarshal(bodyStr, &req)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		return
+	}
+
+	shortURL, err := e.s.Post(req.Url)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		return
+	}
+	if types.ReturnShortWithHost {
+		shortURL = types.OurHost + shortURL
+	}
+
+	res := result{
+		Result: shortURL,
+	}
+	buf, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(buf)
 }

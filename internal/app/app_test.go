@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -22,6 +23,7 @@ const pairnum int = 100
 func TestApp_Run(t *testing.T) {
 	t.Run("Init test", initTest)
 	t.Run("Endpoint POST test", endpointPostTest)
+	t.Run("Endpoint POST api test", endpointPostApiTest)
 	t.Run("Endpoint GET test", endpointGetTest)
 }
 
@@ -53,6 +55,71 @@ func endpointPostTest(t *testing.T) {
 		assert.NotEmpty(t, url)
 		pairs[ik].Short = string(url)
 		log.Printf("added rec.%d for url: %s; short key %s", ik, pairs[ik].URL, url)
+	}
+
+	wrongTests := []struct {
+		url       string
+		body      string
+		retStatus int
+		retBody   string
+	}{
+		{url: "/",
+			body:      "",
+			retStatus: http.StatusBadRequest,
+			retBody:   types.ErrEmptyReqBody.Error()},
+		{url: "/",
+			body:      "addr.com",
+			retStatus: http.StatusBadRequest,
+			retBody:   types.ErrURLNotCorrect.Error()},
+		{url: "/someurl",
+			body:      "",
+			retStatus: http.StatusMethodNotAllowed,
+			retBody:   ""},
+	}
+
+	for _, wt := range wrongTests {
+		reqBody := prepareBody(wt.body)
+		resp, err := http.Post(fmt.Sprintf("http://localhost:8080%s", wt.url), "text/plain", reqBody)
+		require.Nil(t, err)
+		assert.Equal(t, wt.retStatus, resp.StatusCode)
+		if len(wt.retBody) > 0 {
+			assert.NotEmpty(t, resp.Body)
+			respBody, err := io.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			assert.Nil(t, err)
+			assert.Contains(t, string(respBody), wt.retBody)
+		}
+	}
+
+}
+
+func endpointPostApiTest(t *testing.T) {
+	type req struct {
+		Url string `json:"url"`
+	}
+	type res struct {
+		Result string `json:"result"`
+	}
+
+	for ik := 0; ik < pairnum; ik++ {
+
+		req := req{}
+		req.Url = pairs[ik].URL
+		reqBody, _ := json.Marshal(req)
+		resp, err := http.Post("http://localhost:8080/api/shorten", "text/plain", bytes.NewReader(reqBody))
+		require.Nil(t, err)
+		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equal(t, resp.Header.Get("Content-Type"), "application/json")
+		assert.NotEmpty(t, resp.Body)
+
+		url, err := io.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		assert.Nil(t, err)
+		assert.NotEmpty(t, url)
+		res := res{}
+		json.Unmarshal(url, &res)
+		require.Equal(t, pairs[ik].Short, res.Result)
+		log.Printf("checked api rec.%d for url: %s; short key %s", ik, pairs[ik].URL, res.Result)
 	}
 
 	wrongTests := []struct {
