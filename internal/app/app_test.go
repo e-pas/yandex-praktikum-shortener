@@ -23,7 +23,7 @@ const pairnum int = 100
 func TestApp_Run(t *testing.T) {
 	t.Run("Init test", initTest)
 	t.Run("Endpoint POST test", endpointPostTest)
-	t.Run("Endpoint POST api test", endpointPostApiTest)
+	t.Run("Endpoint POST api test", endpointPostAPITest)
 	t.Run("Endpoint GET test", endpointGetTest)
 }
 
@@ -93,9 +93,9 @@ func endpointPostTest(t *testing.T) {
 
 }
 
-func endpointPostApiTest(t *testing.T) {
+func endpointPostAPITest(t *testing.T) {
 	type req struct {
-		Url string `json:"url"`
+		URL string `json:"url"`
 	}
 	type res struct {
 		Result string `json:"result"`
@@ -104,7 +104,7 @@ func endpointPostApiTest(t *testing.T) {
 	for ik := 0; ik < pairnum; ik++ {
 
 		req := req{}
-		req.Url = pairs[ik].URL
+		req.URL = pairs[ik].URL
 		reqBody, _ := json.Marshal(req)
 		resp, err := http.Post("http://localhost:8080/api/shorten", "text/plain", bytes.NewReader(reqBody))
 		require.Nil(t, err)

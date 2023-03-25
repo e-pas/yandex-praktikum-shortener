@@ -60,9 +60,9 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(shortURL))
 }
 
-func (e *Endpoint) PostApi(w http.ResponseWriter, r *http.Request) {
+func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Url string `json:"url"`
+		URL string `json:"url"`
 	}
 	type result struct {
 		Result string `json:"result"`
@@ -82,7 +82,7 @@ func (e *Endpoint) PostApi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := e.s.Post(req.Url)
+	shortURL, err := e.s.Post(req.URL)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))

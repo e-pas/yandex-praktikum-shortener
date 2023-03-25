@@ -29,7 +29,7 @@ func New() (*App, error) {
 
 	a.r.Get("/{id}", a.e.Get)
 	a.r.Post("/", a.e.Post)
-	a.r.Post("/api/shorten", a.e.PostApi)
+	a.r.Post("/api/shorten", a.e.PostAPI)
 
 	return a, nil
 }
