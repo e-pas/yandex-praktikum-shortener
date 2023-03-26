@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	Listen       string `env:"LISTEN" envDefault:":8080"`
-	HostName     string `env:"HOSTNAME" envDefault:"http://localhost:8080"`
+	Listen       string `env:"SERVER_ADDRESS" envDefault:":8080"`
+	HostName     string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	LenShortURL  int    `env:"SHORTLEN" envDefault:"5"`
 	RetShrtWHost bool   `env:"ADDHOST" envDefault:"true"`
 }
