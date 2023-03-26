@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var pairs []types.ShortURL
+var pairs []config.ShortURL
 
 const pairnum int = 100
 
@@ -33,7 +33,7 @@ func initTest(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	for ik := 0; ik < pairnum; ik++ {
-		pairs = append(pairs, types.ShortURL{
+		pairs = append(pairs, config.ShortURL{
 			URL: fmt.Sprintf("http://%s.%s", generateRandStr(20), generateRandStr(3)),
 		})
 	}
@@ -66,11 +66,11 @@ func endpointPostTest(t *testing.T) {
 		{url: "/",
 			body:      "",
 			retStatus: http.StatusBadRequest,
-			retBody:   types.ErrEmptyReqBody.Error()},
+			retBody:   config.ErrEmptyReqBody.Error()},
 		{url: "/",
 			body:      "addr.com",
 			retStatus: http.StatusBadRequest,
-			retBody:   types.ErrURLNotCorrect.Error()},
+			retBody:   config.ErrURLNotCorrect.Error()},
 		{url: "/someurl",
 			body:      "",
 			retStatus: http.StatusMethodNotAllowed,
@@ -131,11 +131,11 @@ func endpointPostAPITest(t *testing.T) {
 		{url: "/",
 			body:      "",
 			retStatus: http.StatusBadRequest,
-			retBody:   types.ErrEmptyReqBody.Error()},
+			retBody:   config.ErrEmptyReqBody.Error()},
 		{url: "/",
 			body:      "addr.com",
 			retStatus: http.StatusBadRequest,
-			retBody:   types.ErrURLNotCorrect.Error()},
+			retBody:   config.ErrURLNotCorrect.Error()},
 		{url: "/someurl",
 			body:      "",
 			retStatus: http.StatusMethodNotAllowed,
@@ -187,7 +187,7 @@ func endpointGetTest(t *testing.T) {
 			retBody:   ""},
 		{url: "/someurl",
 			retStatus: http.StatusBadRequest,
-			retBody:   types.ErrNoSuchRecord.Error()},
+			retBody:   config.ErrNoSuchRecord.Error()},
 		{url: "/someurl/someurl",
 			retStatus: http.StatusNotFound,
 			retBody:   ""},

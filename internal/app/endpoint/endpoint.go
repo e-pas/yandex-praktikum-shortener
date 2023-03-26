@@ -7,12 +7,13 @@ import (
 	"log"
 	"net/http"
 
-	types "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 	"github.com/go-chi/chi/v5"
 )
 
 type Endpoint struct {
 	s service
+	c *config.Config
 }
 
 type service interface {
@@ -20,9 +21,10 @@ type service interface {
 	Get(ID string) (string, error)
 }
 
-func New(s service) *Endpoint {
+func New(s service, c *config.Config) *Endpoint {
 	e := &Endpoint{}
 	e.s = s
+	e.c = c
 	return e
 }
 
@@ -52,8 +54,8 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if types.ReturnShortWithHost {
-		shortURL = types.OurHost + shortURL
+	if e.c.RetShrtWHost {
+		shortURL = e.c.HostName + shortURL
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
@@ -88,8 +90,8 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
 	}
-	if types.ReturnShortWithHost {
-		shortURL = types.OurHost + shortURL
+	if e.c.RetShrtWHost {
+		shortURL = e.c.HostName + shortURL
 	}
 
 	res := result{

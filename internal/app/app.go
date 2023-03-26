@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/endpoint"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/service"
 	"github.com/go-chi/chi/v5"
@@ -11,6 +12,7 @@ import (
 )
 
 type App struct {
+	c *config.Config
 	s *service.Service
 	e *endpoint.Endpoint
 	r chi.Router
@@ -18,9 +20,9 @@ type App struct {
 
 func New() (*App, error) {
 	a := &App{}
-
-	a.s = service.New()
-	a.e = endpoint.New(a.s)
+	a.c = config.New()
+	a.s = service.New(a.c)
+	a.e = endpoint.New(a.s, a.c)
 	a.r = chi.NewRouter()
 	a.r.Use(middleware.RequestID)
 	a.r.Use(middleware.RealIP)

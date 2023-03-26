@@ -5,36 +5,38 @@ import (
 	"net/url"
 	"strings"
 
-	types "github.com/e-pas/yandex-praktikum-shortener/internal/app/short_types"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 )
 
 type Service struct {
-	urls map[string]*types.ShortURL
+	c    *config.Config
+	urls map[string]*config.ShortURL
 }
 
 // Constructor
-func New() *Service {
+func New(c *config.Config) *Service {
 	s := &Service{}
-	s.urls = make(map[string]*types.ShortURL)
+	s.c = c
+	s.urls = make(map[string]*config.ShortURL)
 	return s
 }
 
 // Generate and save short url for giver URL
 func (s *Service) Post(URL string) (string, error) {
 	if len(URL) == 0 {
-		return "", types.ErrEmptyReqBody
+		return "", config.ErrEmptyReqBody
 	}
 	if !isURLok(URL) {
-		return "", types.ErrURLNotCorrect
+		return "", config.ErrURLNotCorrect
 	}
 
-	newURL := &types.ShortURL{
+	newURL := &config.ShortURL{
 		URL:   URL,
 		Short: s.findOrCreateShort(URL),
 	}
 
 	if newURL.Short == "" {
-		return "", types.ErrNoFreeIDs
+		return "", config.ErrNoFreeIDs
 	}
 
 	s.urls[newURL.Short] = newURL
@@ -45,7 +47,7 @@ func (s *Service) Post(URL string) (string, error) {
 func (s *Service) Get(ID string) (string, error) {
 	recURL, ok := s.urls[ID]
 	if !ok {
-		return "", types.ErrNoSuchRecord
+		return "", config.ErrNoSuchRecord
 	}
 	return recURL.URL, nil
 }
@@ -58,14 +60,14 @@ func (s *Service) findOrCreateShort(url string) string {
 		}
 	}
 
-	rndStr := GetRandStr()
+	rndStr := GetRandStr(s.c.LenShortURL)
 	// check: if generated short string for url is already buzy,
 	// rerandomize it again. (or change to bigger value types.LenShortUrl)
 	const maxTry = 10
 	ik := 0
 	for _, ok := s.urls[rndStr]; ok && ik < maxTry; {
 		ik++
-		rndStr = GetRandStr()
+		rndStr = GetRandStr(s.c.LenShortURL)
 	}
 	if ik == maxTry {
 		return ""
@@ -74,12 +76,12 @@ func (s *Service) findOrCreateShort(url string) string {
 	return rndStr
 }
 
-func GetRandStr() string {
+func GetRandStr(lenStr int) string {
 
 	var availChars = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	res := make([]byte, types.LenShortURL)
-	for ik := 0; ik < types.LenShortURL; ik++ {
+	res := make([]byte, lenStr)
+	for ik := 0; ik < lenStr; ik++ {
 		res[ik] = availChars[rand.Intn(len(availChars))]
 	}
 
