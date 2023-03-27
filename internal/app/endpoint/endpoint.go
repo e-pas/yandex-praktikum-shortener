@@ -12,16 +12,17 @@ import (
 )
 
 type Endpoint struct {
-	s service
+	s servicer
 	c *config.Config
 }
 
-type service interface {
+type servicer interface {
 	Post(URL string) (string, error)
 	Get(ID string) (string, error)
+	GetLen() int
 }
 
-func New(s service, c *config.Config) *Endpoint {
+func New(s servicer, c *config.Config) *Endpoint {
 	e := &Endpoint{}
 	e.s = s
 	e.c = c
@@ -106,4 +107,10 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(buf)
+}
+
+func (e *Endpoint) Info(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(" %d record(s) stored", e.s.GetLen())))
+	return
 }

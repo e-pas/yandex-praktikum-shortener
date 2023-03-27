@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Listen       string `env:"SERVER_ADDRESS" envDefault:":8080"`
 	HostName     string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	FileStorage  string `env:"FILE_STORAGE_PATH"`
 	LenShortURL  int    `env:"SHORTLEN" envDefault:"5"`
 	RetShrtWHost bool   `env:"ADDHOST" envDefault:"true"`
 }
@@ -28,8 +29,8 @@ func New() *Config {
 }
 
 type ShortURL struct {
-	Short string
-	URL   string
+	Short string `json:"SHORT"`
+	URL   string `json:"URL"`
 }
 
 var (

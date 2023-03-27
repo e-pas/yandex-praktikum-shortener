@@ -6,18 +6,22 @@ import (
 	"strings"
 
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/saver"
 )
 
 type Service struct {
 	c    *config.Config
+	ds   *saver.Saver
 	urls map[string]*config.ShortURL
 }
 
 // Constructor
-func New(c *config.Config) *Service {
+func New(ds *saver.Saver, c *config.Config) *Service {
 	s := &Service{}
 	s.c = c
+	s.ds = ds
 	s.urls = make(map[string]*config.ShortURL)
+	ds.Load(s.urls)
 	return s
 }
 
@@ -30,16 +34,20 @@ func (s *Service) Post(URL string) (string, error) {
 		return "", config.ErrURLNotCorrect
 	}
 
-	newURL := &config.ShortURL{
-		URL:   URL,
-		Short: s.findOrCreateShort(URL),
+	short, isCreated := s.findOrCreateShort(URL)
+	if !isCreated {
+		return short, nil
 	}
-
-	if newURL.Short == "" {
+	if short == "" {
 		return "", config.ErrNoFreeIDs
 	}
 
+	newURL := &config.ShortURL{
+		URL:   URL,
+		Short: short,
+	}
 	s.urls[newURL.Short] = newURL
+	s.ds.Save(newURL)
 	return newURL.Short, nil
 }
 
@@ -52,11 +60,12 @@ func (s *Service) Get(ID string) (string, error) {
 	return recURL.URL, nil
 }
 
-// Generate new short url or return saved for given url
-func (s *Service) findOrCreateShort(url string) string {
+// Generate new short url or return saved for given url,
+// bool mean true if Short Url is created, or false if it found.
+func (s *Service) findOrCreateShort(url string) (string, bool) {
 	for _, rec := range s.urls {
 		if strings.EqualFold(url, rec.URL) {
-			return rec.Short
+			return rec.Short, false
 		}
 	}
 
@@ -70,10 +79,14 @@ func (s *Service) findOrCreateShort(url string) string {
 		rndStr = GetRandStr(s.c.LenShortURL)
 	}
 	if ik == maxTry {
-		return ""
+		return "", false
 	}
 
-	return rndStr
+	return rndStr, true
+}
+
+func (s *Service) GetLen() int {
+	return len(s.urls)
 }
 
 func GetRandStr(lenStr int) string {
