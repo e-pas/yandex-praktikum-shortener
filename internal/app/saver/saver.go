@@ -34,8 +34,6 @@ func (s *Saver) Load(data map[string]*config.ShortURL) error {
 type diskSaver struct {
 	filename string
 	file     *os.File
-	encoder  *json.Encoder
-	decoder  *json.Decoder
 }
 
 func newDiskSaver(filename string) *diskSaver {
