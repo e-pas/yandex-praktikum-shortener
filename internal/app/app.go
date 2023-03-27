@@ -42,6 +42,6 @@ func New() (*App, error) {
 
 func (a *App) Run() error {
 	log.Println("service running")
-	err := http.ListenAndServe(":8080", a.r)
+	err := http.ListenAndServe(a.c.Listen, a.r)
 	return err
 }
