@@ -22,3 +22,4 @@ vendor/
 .idea
 .vscode
 yandex-praktikum-shortener.code-workspace
+cmd/shortener/test.stor

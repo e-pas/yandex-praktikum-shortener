@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"flag"
 	"log"
 	"strings"
 
@@ -9,10 +10,10 @@ import (
 )
 
 type Config struct {
-	Listen       string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	HostName     string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	Listen       string `env:"SERVER_ADDRESS"`
+	HostName     string `env:"BASE_URL"`
 	FileStorage  string `env:"FILE_STORAGE_PATH"`
-	LenShortURL  int    `env:"SHORTLEN" envDefault:"5"`
+	LenShortURL  int    `env:"SHORTLEN"`
 	RetShrtWHost bool   `env:"ADDHOST" envDefault:"true"`
 }
 
@@ -22,6 +23,19 @@ func New() *Config {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if c.Listen == "" {
+		flag.StringVar(&c.Listen, "a", ":8080", "HTTP listen addr")
+	}
+	if c.HostName == "" {
+		flag.StringVar(&c.HostName, "b", "http://localhost:8080", "Host name in short URL")
+	}
+	if c.FileStorage == "" {
+		flag.StringVar(&c.FileStorage, "f", "", "File to store. If omitted no files will created")
+	}
+	if c.LenShortURL == 0 {
+		flag.IntVar(&c.LenShortURL, "l", 5, "Length of short address")
+	}
+	flag.Parse()
 	if !strings.HasSuffix(c.HostName, "/") {
 		c.HostName = c.HostName + "/"
 	}

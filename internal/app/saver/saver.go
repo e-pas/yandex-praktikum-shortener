@@ -45,38 +45,38 @@ func newDiskSaver(filename string) *diskSaver {
 	}
 }
 
-func (d *diskSaver) open() error {
-	file, err := os.OpenFile(d.filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+func (ds *diskSaver) openFile() error {
+	file, err := os.OpenFile(ds.filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return err
 	}
-	d.file = file
+	ds.file = file
 	return nil
 }
 
-func (d *diskSaver) close() {
-	d.file.Close()
+func (ds *diskSaver) closeFile() {
+	ds.file.Close()
 }
 
-func (d *diskSaver) Save(data *config.ShortURL) error {
-	if err := d.open(); err != nil {
+func (ds *diskSaver) Save(data *config.ShortURL) error {
+	if err := ds.openFile(); err != nil {
 		return err
 	}
-	defer d.close()
-	encoder := json.NewEncoder(d.file)
+	defer ds.closeFile()
+	encoder := json.NewEncoder(ds.file)
 	if err := encoder.Encode(&data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *diskSaver) Load(data map[string]*config.ShortURL) error {
-	if err := d.open(); err != nil {
+func (ds *diskSaver) Load(data map[string]*config.ShortURL) error {
+	if err := ds.openFile(); err != nil {
 		return err
 	}
-	defer d.close()
+	defer ds.closeFile()
 
-	decoder := json.NewDecoder(d.file)
+	decoder := json.NewDecoder(ds.file)
 	for decoder.More() {
 		shortRec := &config.ShortURL{}
 		if err := decoder.Decode(shortRec); err != nil {
