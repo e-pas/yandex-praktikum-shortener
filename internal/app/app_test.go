@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -43,14 +44,21 @@ func initTest(t *testing.T) {
 func endpointPostTest(t *testing.T) {
 
 	for ik := 0; ik < pairnum; ik++ {
-		reqBody := prepareBody(pairs[ik].URL)
-		resp, err := http.Post("http://localhost:8080", "text/plain", reqBody)
+		reqBody := prepareBody(pairs[ik].URL, true)
+		client := &http.Client{}
+		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080", reqBody)
+		require.Nil(t, err)
+		req.Header.Add("Content-Encoding", "gzip")
+		//		req.Body =
+		resp, err := client.Do(req)
+		//		resp, err := http.Post("http://localhost:8080", "text/plain", reqBody)
+
 		require.Nil(t, err)
 		require.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.NotEmpty(t, resp.Body)
 
 		url, err := io.ReadAll(resp.Body)
-		defer resp.Body.Close()
+		resp.Body.Close()
 		assert.Nil(t, err)
 		assert.NotEmpty(t, url)
 		pairs[ik].Short = string(url)
@@ -78,7 +86,7 @@ func endpointPostTest(t *testing.T) {
 	}
 
 	for _, wt := range wrongTests {
-		reqBody := prepareBody(wt.body)
+		reqBody := prepareBody(wt.body, false)
 		resp, err := http.Post(fmt.Sprintf("http://localhost:8080%s", wt.url), "text/plain", reqBody)
 		require.Nil(t, err)
 		assert.Equal(t, wt.retStatus, resp.StatusCode)
@@ -143,7 +151,7 @@ func endpointPostAPITest(t *testing.T) {
 	}
 
 	for _, wt := range wrongTests {
-		reqBody := prepareBody(wt.body)
+		reqBody := prepareBody(wt.body, false)
 		resp, err := http.Post(fmt.Sprintf("http://localhost:8080%s", wt.url), "text/plain", reqBody)
 		require.Nil(t, err)
 		assert.Equal(t, wt.retStatus, resp.StatusCode)
@@ -218,6 +226,24 @@ func generateRandStr(l int) string {
 	return string(res)
 }
 
-func prepareBody(str string) io.Reader {
-	return bytes.NewReader([]byte(str))
+func prepareBody(str string, compr bool) io.Reader {
+	res := []byte(str)
+	if compr {
+		res, _ = Compress(res)
+	}
+	return bytes.NewReader(res)
+}
+
+func Compress(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	_, err := w.Write(data)
+	if err != nil {
+		return nil, err
+	}
+	err = w.Close()
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }

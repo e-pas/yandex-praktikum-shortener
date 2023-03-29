@@ -31,7 +31,8 @@ func New() (*App, error) {
 	a.r.Use(middleware.RealIP)
 	a.r.Use(middleware.Logger)
 	a.r.Use(middleware.Recoverer)
-	a.r.Use(config.GzipHandle)
+	a.r.Use(config.GzipResponse)
+	a.r.Use(config.GunzipRequest)
 
 	a.r.Get("/{id}", a.e.Get)
 	a.r.Get("/info", a.e.Info)

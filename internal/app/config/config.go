@@ -53,4 +53,5 @@ var (
 	ErrEmptyReqBody   = errors.New("empty request body")
 	ErrURLNotCorrect  = errors.New("given url is not correct")
 	ErrNoFreeIDs      = errors.New("no free short url")
+	ErrInvalidGZip    = errors.New("error in gzipped request")
 )
