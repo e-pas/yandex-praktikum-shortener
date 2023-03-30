@@ -13,16 +13,11 @@ type gzipWrite struct {
 	gzWriter io.Writer
 }
 
-func (gz gzipWrite) WriteHeader(code int) {
-	gz.ResponseWriter.WriteHeader(code)
-}
-
 func (gz gzipWrite) Write(buf []byte) (int, error) {
 	return gz.gzWriter.Write(buf)
 }
 
 type gzipRead struct {
-	io.Reader
 	gzReader io.Reader
 }
 
@@ -59,6 +54,7 @@ func GunzipRequest(next http.Handler) http.Handler {
 		gzr, err := gzip.NewReader(r.Body)
 		if err != nil {
 			log.Println(ErrInvalidGZip)
+			return
 		}
 		defer gzr.Close()
 		gzbody := gzipRead{
