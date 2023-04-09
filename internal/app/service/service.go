@@ -91,7 +91,7 @@ func (s *Service) findOrCreateShort(url string) (string, bool) {
 }
 
 // Returns urls by given user
-func (s *Service) GetUrlByUser(userID string) []map[string]string {
+func (s *Service) GetURLByUser(userID string) []map[string]string {
 	res := make([]map[string]string, 0)
 	hostName := ""
 	if s.c.RetShrtWHost {

@@ -19,7 +19,7 @@ type Endpoint struct {
 type servicer interface {
 	Post(URL string, userID string) (string, error)
 	Get(ID string) (string, error)
-	GetUrlByUser(userID string) []map[string]string
+	GetURLByUser(userID string) []map[string]string
 	GetLen() int
 }
 
@@ -98,7 +98,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 
 func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(config.ContextKeyUserID).(string)
-	urlByUser := e.s.GetUrlByUser(userID)
+	urlByUser := e.s.GetURLByUser(userID)
 	if len(urlByUser) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
