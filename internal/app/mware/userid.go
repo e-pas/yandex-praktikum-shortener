@@ -16,12 +16,11 @@ import (
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 )
 
-func UserId(next http.Handler) http.Handler {
+func UserID(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		var (
-			userID     string
-			isCookieOk bool = true
-		)
+		var userID string
+
+		isCookieOk := true
 		usercookie, err := r.Cookie(config.CookieName)
 		if err != nil {
 			switch {

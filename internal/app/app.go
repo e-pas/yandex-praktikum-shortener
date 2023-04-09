@@ -34,7 +34,7 @@ func New() (*App, error) {
 	a.r.Use(middleware.Recoverer)
 	a.r.Use(mware.GzipResponse)
 	a.r.Use(mware.GunzipRequest)
-	a.r.Use(mware.UserId)
+	a.r.Use(mware.UserID)
 
 	a.r.Get("/{id}", a.e.Get)
 	a.r.Get("/api/user/urls", a.e.ShowURLByUser)
