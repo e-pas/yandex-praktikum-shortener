@@ -43,13 +43,12 @@ func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value(config.ContextKeyUserID).(string)
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
-	userID := r.Context().Value(config.CookieName).(string)
 	shortURL, err := e.s.Post(string(bodyStr), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -62,7 +61,7 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
-
+	userID := r.Context().Value(config.ContextKeyUserID).(string)
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -78,7 +77,6 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value(config.CookieName).(string)
 	shortURL, err := e.s.Post(req[config.PostAPIreqTag], userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -99,7 +97,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(config.CookieName).(string)
+	userID := r.Context().Value(config.ContextKeyUserID).(string)
 	urlByUser := e.s.GetUrlByUser(userID)
 	if len(urlByUser) == 0 {
 		w.WriteHeader(http.StatusNoContent)

@@ -65,7 +65,7 @@ func UserID(next http.Handler) http.Handler {
 			http.SetCookie(w, &newcookie)
 		}
 
-		ctx := context.WithValue(r.Context(), config.CookieName, userID)
+		ctx := context.WithValue(r.Context(), config.ContextKeyUserID, userID)
 		log.Printf("User id: %s", userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

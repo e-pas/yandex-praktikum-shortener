@@ -24,6 +24,12 @@ const (
 	PassCiph      string = "AF12345"
 )
 
+type ctxKey int
+
+const (
+	ContextKeyUserID ctxKey = 1
+)
+
 func New() *Config {
 	c := &Config{}
 	err := env.Parse(c)
