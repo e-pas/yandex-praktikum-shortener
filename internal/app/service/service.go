@@ -26,7 +26,7 @@ func New(ds *saver.Saver, c *config.Config) *Service {
 }
 
 // Generate and save short url for giver URL
-func (s *Service) Post(URL string) (string, error) {
+func (s *Service) Post(URL string, userID string) (string, error) {
 	if len(URL) == 0 {
 		return "", config.ErrEmptyReqBody
 	}
@@ -35,20 +35,25 @@ func (s *Service) Post(URL string) (string, error) {
 	}
 
 	short, isCreated := s.findOrCreateShort(URL)
-	if !isCreated {
-		return short, nil
-	}
-	if short == "" {
-		return "", config.ErrNoFreeIDs
+	if isCreated {
+		if short == "" {
+			return "", config.ErrNoFreeIDs
+		}
+
+		newURL := &config.ShortURL{
+			URL:    URL,
+			Short:  short,
+			UserID: userID,
+		}
+		s.urls[newURL.Short] = newURL
+		s.ds.Save(newURL)
 	}
 
-	newURL := &config.ShortURL{
-		URL:   URL,
-		Short: short,
+	if s.c.RetShrtWHost {
+		short = s.c.HostName + short
 	}
-	s.urls[newURL.Short] = newURL
-	s.ds.Save(newURL)
-	return newURL.Short, nil
+
+	return short, nil
 }
 
 // Get stored URL for giver short url
@@ -83,6 +88,24 @@ func (s *Service) findOrCreateShort(url string) (string, bool) {
 	}
 
 	return rndStr, true
+}
+
+// Returns urls by given user
+func (s *Service) GetUrlByUser(userID string) []map[string]string {
+	res := make([]map[string]string, 0)
+	hostName := ""
+	if s.c.RetShrtWHost {
+		hostName = s.c.HostName
+	}
+	for _, url := range s.urls {
+		if url.UserID == userID {
+			rec := make(map[string]string)
+			rec["short_url"] = hostName + url.Short
+			rec["original_url"] = url.URL
+			res = append(res, rec)
+		}
+	}
+	return res
 }
 
 func (s *Service) GetLen() int {

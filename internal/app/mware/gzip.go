@@ -1,4 +1,4 @@
-package config
+package mware
 
 import (
 	"compress/gzip"
@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 )
 
 type gzipWrite struct {
@@ -21,7 +23,7 @@ type gzipRead struct {
 	gzReader io.Reader
 }
 
-func (gzr gzipRead) Read(buf []byte) (n int, err error) {
+func (gzr gzipRead) Read(buf []byte) (int, error) {
 	return gzr.gzReader.Read(buf)
 }
 
@@ -53,7 +55,7 @@ func GunzipRequest(next http.Handler) http.Handler {
 
 		gzr, err := gzip.NewReader(r.Body)
 		if err != nil {
-			log.Println(ErrInvalidGZip)
+			log.Println(config.ErrInvalidGZip)
 			return
 		}
 		defer gzr.Close()

@@ -6,10 +6,12 @@ import (
 
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/endpoint"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/mware"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/saver"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/service"
+
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type App struct {
@@ -27,14 +29,15 @@ func New() (*App, error) {
 	a.s = service.New(a.ds, a.c)
 	a.e = endpoint.New(a.s, a.c)
 	a.r = chi.NewRouter()
-	a.r.Use(middleware.RequestID)
 	a.r.Use(middleware.RealIP)
 	a.r.Use(middleware.Logger)
 	a.r.Use(middleware.Recoverer)
-	a.r.Use(config.GzipResponse)
-	a.r.Use(config.GunzipRequest)
+	a.r.Use(mware.GzipResponse)
+	a.r.Use(mware.GunzipRequest)
+	a.r.Use(mware.UserId)
 
 	a.r.Get("/{id}", a.e.Get)
+	a.r.Get("/api/user/urls", a.e.ShowUrlByUser)
 	a.r.Get("/info", a.e.Info)
 	a.r.Post("/", a.e.Post)
 	a.r.Post("/api/shorten", a.e.PostAPI)

@@ -49,9 +49,7 @@ func endpointPostTest(t *testing.T) {
 		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080", reqBody)
 		require.Nil(t, err)
 		req.Header.Add("Content-Encoding", "gzip")
-		//		req.Body =
 		resp, err := client.Do(req)
-		//		resp, err := http.Post("http://localhost:8080", "text/plain", reqBody)
 
 		require.Nil(t, err)
 		require.Equal(t, http.StatusCreated, resp.StatusCode)

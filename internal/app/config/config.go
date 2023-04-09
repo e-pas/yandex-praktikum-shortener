@@ -17,6 +17,13 @@ type Config struct {
 	RetShrtWHost bool   `env:"ADDHOST" envDefault:"true"`
 }
 
+const (
+	PostAPIreqTag string = "url"
+	PostAPIresTag string = "result"
+	CookieName    string = "ShrtnrUserID"
+	PassCiph      string = "AF12345"
+)
+
 func New() *Config {
 	c := &Config{}
 	err := env.Parse(c)
@@ -43,8 +50,9 @@ func New() *Config {
 }
 
 type ShortURL struct {
-	Short string `json:"SHORT"`
-	URL   string `json:"URL"`
+	Short  string `json:"SHORT"`
+	URL    string `json:"URL"`
+	UserID string `json:"USERID"`
 }
 
 var (

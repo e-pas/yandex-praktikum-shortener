@@ -17,8 +17,9 @@ type Endpoint struct {
 }
 
 type servicer interface {
-	Post(URL string) (string, error)
+	Post(URL string, userID string) (string, error)
 	Get(ID string) (string, error)
+	GetUrlByUser(userID string) []map[string]string
 	GetLen() int
 }
 
@@ -48,15 +49,12 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 		log.Print(err.Error())
 		return
 	}
-	shortURL, err := e.s.Post(string(bodyStr))
+	userID := r.Context().Value(config.CookieName).(string)
+	shortURL, err := e.s.Post(string(bodyStr), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
-	}
-
-	if e.c.RetShrtWHost {
-		shortURL = e.c.HostName + shortURL
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
@@ -64,20 +62,15 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
-	type request struct {
-		URL string `json:"url"`
-	}
-	type result struct {
-		Result string `json:"result"`
-	}
 
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
 	}
 
-	req := request{}
+	req := map[string]string{}
 	err = json.Unmarshal(bodyStr, &req)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -85,19 +78,15 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := e.s.Post(req.URL)
+	userID := r.Context().Value(config.CookieName).(string)
+	shortURL, err := e.s.Post(req[config.PostAPIreqTag], userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
 	}
-	if e.c.RetShrtWHost {
-		shortURL = e.c.HostName + shortURL
-	}
 
-	res := result{
-		Result: shortURL,
-	}
+	res := map[string]string{config.PostAPIresTag: shortURL}
 	buf, err := json.Marshal(res)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -106,6 +95,24 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	w.Write(buf)
+}
+
+func (e *Endpoint) ShowUrlByUser(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(config.CookieName).(string)
+	urlByUser := e.s.GetUrlByUser(userID)
+	if len(urlByUser) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	buf, err := json.MarshalIndent(urlByUser, "", "   ")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(buf)
 }
 
