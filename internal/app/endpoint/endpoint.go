@@ -98,7 +98,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf)
 }
 
-func (e *Endpoint) ShowUrlByUser(w http.ResponseWriter, r *http.Request) {
+func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(config.CookieName).(string)
 	urlByUser := e.s.GetUrlByUser(userID)
 	if len(urlByUser) == 0 {

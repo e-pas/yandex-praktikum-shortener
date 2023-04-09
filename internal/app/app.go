@@ -37,7 +37,7 @@ func New() (*App, error) {
 	a.r.Use(mware.UserId)
 
 	a.r.Get("/{id}", a.e.Get)
-	a.r.Get("/api/user/urls", a.e.ShowUrlByUser)
+	a.r.Get("/api/user/urls", a.e.ShowURLByUser)
 	a.r.Get("/info", a.e.Info)
 	a.r.Post("/", a.e.Post)
 	a.r.Post("/api/shorten", a.e.PostAPI)
