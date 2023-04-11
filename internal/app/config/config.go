@@ -13,6 +13,7 @@ type Config struct {
 	Listen       string `env:"SERVER_ADDRESS"`
 	HostName     string `env:"BASE_URL"`
 	FileStorage  string `env:"FILE_STORAGE_PATH"`
+	PgConnString string `env:"DATABASE_DSN"`
 	LenShortURL  int    `env:"SHORTLEN"`
 	RetShrtWHost bool   `env:"ADDHOST" envDefault:"true"`
 }
@@ -44,6 +45,9 @@ func New() *Config {
 	}
 	if c.FileStorage == "" {
 		flag.StringVar(&c.FileStorage, "f", "", "File to store. If omitted no files will created")
+	}
+	if c.PgConnString == "" {
+		flag.StringVar(&c.PgConnString, "d", "postgres://postgres:qetuo@localhost:5432", "Postgres connect URL")
 	}
 	if c.LenShortURL == 0 {
 		flag.IntVar(&c.LenShortURL, "l", 5, "Length of short address")

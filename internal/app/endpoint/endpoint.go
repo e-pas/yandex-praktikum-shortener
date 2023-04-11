@@ -20,6 +20,7 @@ type servicer interface {
 	Post(URL string, userID string) (string, error)
 	Get(ID string) (string, error)
 	GetURLByUser(userID string) []map[string]string
+	PingDB() error
 	GetLen() int
 }
 
@@ -112,6 +113,16 @@ func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(buf)
+}
+
+func (e *Endpoint) Ping(w http.ResponseWriter, r *http.Request) {
+	err := e.s.PingDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("PONG"))
 }
 
 func (e *Endpoint) Info(w http.ResponseWriter, r *http.Request) {

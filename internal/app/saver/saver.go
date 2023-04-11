@@ -9,11 +9,13 @@ import (
 
 type Saver struct {
 	ds *diskSaver
+	pg *pgSaver
 }
 
 func New(c *config.Config) *Saver {
 	return &Saver{
 		ds: newDiskSaver(c.FileStorage),
+		pg: newPgSaver(c.PgConnString),
 	}
 }
 
@@ -29,6 +31,10 @@ func (s *Saver) Load(data map[string]*config.ShortURL) error {
 		return s.ds.Load(data)
 	}
 	return nil
+}
+
+func (s *Saver) PingDB() error {
+	return s.pg.Ping()
 }
 
 type diskSaver struct {

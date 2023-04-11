@@ -108,6 +108,10 @@ func (s *Service) GetURLByUser(userID string) []map[string]string {
 	return res
 }
 
+func (s *Service) PingDB() error {
+	return s.ds.PingDB()
+}
+
 func (s *Service) GetLen() int {
 	return len(s.urls)
 }
