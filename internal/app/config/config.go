@@ -47,7 +47,7 @@ func New() *Config {
 		flag.StringVar(&c.FileStorage, "f", "", "File to store. If omitted no files will created")
 	}
 	if c.PgConnString == "" {
-		flag.StringVar(&c.PgConnString, "d", "postgres://postgres:qetuo@localhost:5432", "Postgres connect URL")
+		flag.StringVar(&c.PgConnString, "d", "postgres://postgres:qetuo@localhost:5432/test", "Postgres connect URL")
 	}
 	if c.LenShortURL == 0 {
 		flag.IntVar(&c.LenShortURL, "l", 5, "Length of short address")
@@ -66,10 +66,11 @@ type ShortURL struct {
 }
 
 var (
-	ErrNoSuchRecord   = errors.New("no such record")
-	ErrInvalidReqBody = errors.New("invalid request body")
-	ErrEmptyReqBody   = errors.New("empty request body")
-	ErrURLNotCorrect  = errors.New("given url is not correct")
-	ErrNoFreeIDs      = errors.New("no free short url")
-	ErrInvalidGZip    = errors.New("error in gzipped request")
+	ErrNoSuchRecord      = errors.New("no such record")
+	ErrInvalidReqBody    = errors.New("invalid request body")
+	ErrEmptyReqBody      = errors.New("empty request body")
+	ErrURLNotCorrect     = errors.New("given url is not correct")
+	ErrNoFreeIDs         = errors.New("no free short url")
+	ErrInvalidGZip       = errors.New("error in gzipped request")
+	ErrNoAttachedStorage = errors.New("no attached storage")
 )

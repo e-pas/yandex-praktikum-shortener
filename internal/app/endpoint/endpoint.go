@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,10 +18,10 @@ type Endpoint struct {
 }
 
 type servicer interface {
-	Post(URL string, userID string) (string, error)
+	Post(ctx context.Context, string, userID string) (string, error)
 	Get(ID string) (string, error)
 	GetURLByUser(userID string) []map[string]string
-	PingDB() error
+	PingDB(ctx context.Context) error
 	GetLen() int
 }
 
@@ -50,7 +51,7 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 		log.Print(err.Error())
 		return
 	}
-	shortURL, err := e.s.Post(string(bodyStr), userID)
+	shortURL, err := e.s.Post(r.Context(), string(bodyStr), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
@@ -78,7 +79,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := e.s.Post(req[config.PostAPIreqTag], userID)
+	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag], userID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
@@ -116,7 +117,7 @@ func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) Ping(w http.ResponseWriter, r *http.Request) {
-	err := e.s.PingDB()
+	err := e.s.PingDB(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

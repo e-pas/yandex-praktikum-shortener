@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -21,12 +22,12 @@ func New(ds *saver.Saver, c *config.Config) *Service {
 	s.c = c
 	s.ds = ds
 	s.urls = make(map[string]*config.ShortURL)
-	ds.Load(s.urls)
+	ds.Load(context.Background(), s.urls)
 	return s
 }
 
 // Generate and save short url for giver URL
-func (s *Service) Post(URL string, userID string) (string, error) {
+func (s *Service) Post(ctx context.Context, URL string, userID string) (string, error) {
 	if len(URL) == 0 {
 		return "", config.ErrEmptyReqBody
 	}
@@ -46,7 +47,7 @@ func (s *Service) Post(URL string, userID string) (string, error) {
 			UserID: userID,
 		}
 		s.urls[newURL.Short] = newURL
-		s.ds.Save(newURL)
+		s.ds.Save(ctx, newURL)
 	}
 
 	if s.c.RetShrtWHost {
@@ -90,7 +91,7 @@ func (s *Service) findOrCreateShort(url string) (string, bool) {
 	return rndStr, true
 }
 
-// Returns urls by given user
+// Returns map of short|long urls stored by given user
 func (s *Service) GetURLByUser(userID string) []map[string]string {
 	res := make([]map[string]string, 0)
 	hostName := ""
@@ -108,8 +109,8 @@ func (s *Service) GetURLByUser(userID string) []map[string]string {
 	return res
 }
 
-func (s *Service) PingDB() error {
-	return s.ds.PingDB()
+func (s *Service) PingDB(ctx context.Context) error {
+	return s.ds.Ping(ctx)
 }
 
 func (s *Service) GetLen() int {
