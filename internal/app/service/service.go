@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -72,6 +73,7 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 	res := make([]map[string]string, 0)              // map with result for browse
 	for _, URL := range URLs {
 		short, isCreated := s.findOrCreateShort(URL["original_url"])
+		log.Println(URL["original_url"], short, isCreated)
 		if isCreated {
 			if short == "" {
 				return nil, config.ErrNoFreeIDs
