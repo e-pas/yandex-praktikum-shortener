@@ -41,6 +41,7 @@ func New() (*App, error) {
 	a.r.Get("/info", a.e.Info)
 	a.r.Post("/", a.e.Post)
 	a.r.Post("/api/shorten", a.e.PostAPI)
+	a.r.Post("/api/shorten/batch", a.e.PostBatchAPI)
 	a.r.Get("/ping", a.e.Ping)
 
 	return a, nil

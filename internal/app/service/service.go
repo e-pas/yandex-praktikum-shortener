@@ -27,7 +27,7 @@ func New(ds *saver.Saver, c *config.Config) *Service {
 }
 
 // Generate and save short url for giver URL
-func (s *Service) Post(ctx context.Context, URL string, userID string) (string, error) {
+func (s *Service) Post(ctx context.Context, URL string) (string, error) {
 	if len(URL) == 0 {
 		return "", config.ErrEmptyReqBody
 	}
@@ -35,6 +35,7 @@ func (s *Service) Post(ctx context.Context, URL string, userID string) (string, 
 		return "", config.ErrURLNotCorrect
 	}
 
+	userID := ctx.Value(config.ContextKeyUserID).(string)
 	short, isCreated := s.findOrCreateShort(URL)
 	if isCreated {
 		if short == "" {
@@ -55,6 +56,48 @@ func (s *Service) Post(ctx context.Context, URL string, userID string) (string, 
 	}
 
 	return short, nil
+}
+
+func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]map[string]string, error) {
+	if len(URLs) == 0 {
+		return nil, config.ErrEmptyReqBody
+	}
+
+	userID := ctx.Value(config.ContextKeyUserID).(string)
+	hostName := ""
+	if s.c.RetShrtWHost {
+		hostName = s.c.HostName
+	}
+	createdURLs := make(map[string]*config.ShortURL) // store map for new records
+	res := make([]map[string]string, 0)              // map with result for browse
+	for _, URL := range URLs {
+		short, isCreated := s.findOrCreateShort(URL["original_url"])
+		if isCreated {
+			if short == "" {
+				return nil, config.ErrNoFreeIDs
+			}
+
+			newURL := &config.ShortURL{
+				URL:    URL["original_url"],
+				Short:  short,
+				UserID: userID,
+			}
+			createdURLs[newURL.Short] = newURL
+		}
+		rec := make(map[string]string)
+		rec["correlation_id"] = URL["correlation_id"]
+		rec["short_url"] = hostName + short
+		res = append(res, rec)
+	}
+	err := s.ds.SaveBatch(ctx, createdURLs)
+	if err != nil {
+		return nil, err
+	}
+	// merge created records map with  main map
+	for _, createRec := range createdURLs {
+		s.urls[createRec.Short] = createRec
+	}
+	return res, nil
 }
 
 // Get stored URL for giver short url

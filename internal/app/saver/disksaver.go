@@ -34,6 +34,15 @@ func (ds *diskSaver) Save(ctx context.Context, data *config.ShortURL) error {
 	return nil
 }
 
+func (ds *diskSaver) SaveBatch(ctx context.Context, data map[string]*config.ShortURL) error {
+	for _, rec := range data {
+		if err := ds.Save(ctx, rec); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (ds *diskSaver) Load(ctx context.Context, data map[string]*config.ShortURL) error {
 	if err := ds.openFile(); err != nil {
 		return err

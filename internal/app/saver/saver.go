@@ -8,6 +8,7 @@ import (
 
 type mediaSaver interface {
 	Save(ctx context.Context, data *config.ShortURL) error
+	SaveBatch(ctx context.Context, data map[string]*config.ShortURL) error
 	Load(ctx context.Context, data map[string]*config.ShortURL) error
 	Ping(ctx context.Context) error
 }
@@ -33,6 +34,13 @@ func New(c *config.Config) *Saver {
 func (s *Saver) Save(ctx context.Context, data *config.ShortURL) error {
 	if s.ms != nil {
 		return s.ms.Save(ctx, data)
+	}
+	return nil
+}
+
+func (s *Saver) SaveBatch(ctx context.Context, data map[string]*config.ShortURL) error {
+	if s.ms != nil {
+		return s.ms.SaveBatch(ctx, data)
 	}
 	return nil
 }

@@ -18,7 +18,8 @@ type Endpoint struct {
 }
 
 type servicer interface {
-	Post(ctx context.Context, string, userID string) (string, error)
+	Post(ctx context.Context, URL string) (string, error)
+	PostBatch(ctx context.Context, URLs []map[string]string) ([]map[string]string, error)
 	Get(ID string) (string, error)
 	GetURLByUser(userID string) []map[string]string
 	PingDB(ctx context.Context) error
@@ -45,13 +46,12 @@ func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(config.ContextKeyUserID).(string)
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Print(err.Error())
 		return
 	}
-	shortURL, err := e.s.Post(r.Context(), string(bodyStr), userID)
+	shortURL, err := e.s.Post(r.Context(), string(bodyStr))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
@@ -63,7 +63,6 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(config.ContextKeyUserID).(string)
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,7 +78,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag], userID)
+	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
@@ -91,6 +90,35 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(buf)
+}
+
+func (e *Endpoint) PostBatchAPI(w http.ResponseWriter, r *http.Request) {
+	bodyStr, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	req := make([]map[string]string, 0)
+	err = json.Unmarshal(bodyStr, &req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	res, err := e.s.PostBatch(r.Context(), req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusInternalServerError)
+		return
+	}
+	buf, err := json.MarshalIndent(res, "", " ")
+	if err != nil {
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
