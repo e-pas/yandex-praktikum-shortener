@@ -127,10 +127,14 @@ func (s *Service) findOrCreateShort(url string) (string, bool) {
 	// rerandomize it again. (or change to bigger value types.LenShortUrl)
 	const maxTry = 10
 	ik := 0
-	for _, ok := s.urls[rndStr]; ok && ik < maxTry; {
-		log.Printf("rand str: %s", rndStr)
-		ik++
-		rndStr = GetRandStr(s.c.LenShortURL)
+	for ik < maxTry {
+		if _, ok := s.urls[rndStr]; ok && (ik < maxTry) {
+			log.Printf("rand str: %s url: %s", rndStr, s.urls[rndStr].URL)
+			rndStr = GetRandStr(s.c.LenShortURL)
+			ik++
+			continue
+		}
+		break
 	}
 	if ik == maxTry {
 		return "", false
