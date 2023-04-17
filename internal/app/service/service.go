@@ -22,7 +22,7 @@ func New(ds *saver.Saver, c *config.Config) *Service {
 	s := &Service{}
 	s.c = c
 	s.ds = ds
-	s.urls = make(map[string]*config.ShortURL)
+	s.urls = make(map[string]*config.ShortURL, 0)
 	ds.Load(context.Background(), s.urls)
 	return s
 }
@@ -92,6 +92,7 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 		rec["short_url"] = hostName + short
 		res = append(res, rec)
 	}
+	log.Println(s.urls)
 	err := s.ds.SaveBatch(ctx, createdURLs)
 	if err != nil {
 		return nil, err
