@@ -39,6 +39,7 @@ func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		log.Printf(" Error: %v", err)
 		return
 	}
 	w.Header().Set("Location", longURL)
@@ -124,6 +125,8 @@ func (e *Endpoint) PostBatchAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(buf)
+	log.Println(req)
+	log.Println(res)
 }
 
 func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {
