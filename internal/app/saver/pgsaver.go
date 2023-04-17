@@ -112,9 +112,6 @@ func (pg *pgSaver) SaveBatch(ctx context.Context, data map[string]*config.ShortU
 		return err
 	}
 
-	// var qerr error
-	// for qerr == nil {
-	// }
 	return tx.Commit(ctx)
 }
 
