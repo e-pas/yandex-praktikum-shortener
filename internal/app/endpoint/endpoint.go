@@ -125,8 +125,6 @@ func (e *Endpoint) PostBatchAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(buf)
-	log.Println(req)
-	log.Println(res)
 }
 
 func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {

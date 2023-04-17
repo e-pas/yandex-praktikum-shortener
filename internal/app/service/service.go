@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -71,10 +70,8 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 	}
 	createdURLs := make(map[string]*config.ShortURL) // store map for new records
 	res := make([]map[string]string, 0)              // map with result for browse
-	log.Println(s.urls)
 	for _, URL := range URLs {
 		short, isCreated := s.findOrCreateShort(URL["original_url"])
-		log.Println(URL["original_url"], short, isCreated) //
 		if isCreated {
 			if short == "" {
 				return nil, config.ErrNoFreeIDs
@@ -92,7 +89,6 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 		rec["short_url"] = hostName + short
 		res = append(res, rec)
 	}
-	log.Println(s.urls)
 	err := s.ds.SaveBatch(ctx, createdURLs)
 	if err != nil {
 		return nil, err
@@ -129,7 +125,6 @@ func (s *Service) findOrCreateShort(url string) (string, bool) {
 	ik := 0
 	for ik < maxTry {
 		if _, ok := s.urls[rndStr]; ok && (ik < maxTry) {
-			log.Printf("rand str: %s url: %s", rndStr, s.urls[rndStr].URL)
 			rndStr = GetRandStr(s.c.LenShortURL)
 			ik++
 			continue
