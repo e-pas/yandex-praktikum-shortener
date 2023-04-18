@@ -73,5 +73,5 @@ var (
 	ErrNoFreeIDs         = errors.New("no free short url")
 	ErrInvalidGZip       = errors.New("error in gzipped request")
 	ErrNoAttachedStorage = errors.New("no attached storage")
-	WarnDuplicateURL     = errors.New("duplicate url")
+	ErrDuplicateURL      = errors.New("duplicate url")
 )

@@ -55,11 +55,11 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 	}
 	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), string(bodyStr))
-	if err != nil && !errors.Is(err, config.WarnDuplicateURL) {
+	if err != nil && !errors.Is(err, config.ErrDuplicateURL) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
-	} else if errors.Is(err, config.WarnDuplicateURL) {
+	} else if errors.Is(err, config.ErrDuplicateURL) {
 		retStatus = http.StatusConflict
 	}
 
@@ -86,11 +86,11 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 
 	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag])
-	if err != nil && !errors.Is(err, config.WarnDuplicateURL) {
+	if err != nil && !errors.Is(err, config.ErrDuplicateURL) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
-	} else if errors.Is(err, config.WarnDuplicateURL) {
+	} else if errors.Is(err, config.ErrDuplicateURL) {
 		retStatus = http.StatusConflict
 	}
 

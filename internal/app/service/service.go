@@ -56,7 +56,7 @@ func (s *Service) Post(ctx context.Context, URL string) (string, error) {
 	}
 
 	if !isCreated {
-		return short, config.WarnDuplicateURL
+		return short, config.ErrDuplicateURL
 	}
 	return short, nil
 }
