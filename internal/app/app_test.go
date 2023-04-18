@@ -114,7 +114,7 @@ func endpointPostAPITest(t *testing.T) {
 		reqBody, _ := json.Marshal(req)
 		resp, err := http.Post("http://localhost:8080/api/shorten", "text/plain", bytes.NewReader(reqBody))
 		require.Nil(t, err)
-		require.Equal(t, http.StatusCreated, resp.StatusCode)
+		require.Equal(t, http.StatusConflict, resp.StatusCode)
 		require.Equal(t, resp.Header.Get("Content-Type"), "application/json")
 		assert.NotEmpty(t, resp.Body)
 

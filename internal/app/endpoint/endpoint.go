@@ -3,6 +3,7 @@ package endpoint
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -52,14 +53,18 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 		log.Print(err.Error())
 		return
 	}
+	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), string(bodyStr))
-	if err != nil {
+	if err != nil && !errors.Is(err, config.WarnDuplicateURL) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
+	} else if errors.Is(err, config.WarnDuplicateURL) {
+		retStatus = http.StatusConflict
 	}
+
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(retStatus)
 	w.Write([]byte(shortURL))
 }
 
@@ -79,11 +84,14 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag])
-	if err != nil {
+	if err != nil && !errors.Is(err, config.WarnDuplicateURL) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
 		return
+	} else if errors.Is(err, config.WarnDuplicateURL) {
+		retStatus = http.StatusConflict
 	}
 
 	res := map[string]string{config.PostAPIresTag: shortURL}
@@ -94,7 +102,7 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(retStatus)
 	w.Write(buf)
 }
 
