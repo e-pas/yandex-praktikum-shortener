@@ -38,8 +38,7 @@ func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 	urlID := chi.URLParam(r, "id")
 	longURL, err := e.s.Get(urlID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
 		log.Printf(" Error: %v", err)
 		return
 	}
@@ -55,12 +54,14 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 	}
 	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), string(bodyStr))
-	if err != nil && !errors.Is(err, config.ErrDuplicateURL) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
-		return
-	} else if errors.Is(err, config.ErrDuplicateURL) {
-		retStatus = http.StatusConflict
+	if err != nil {
+		switch {
+		default:
+			http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+			return
+		case errors.Is(err, config.ErrDuplicateURL):
+			retStatus = http.StatusConflict
+		}
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -71,7 +72,7 @@ func (e *Endpoint) Post(w http.ResponseWriter, r *http.Request) {
 func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	bodyStr, err := io.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Body error", http.StatusInternalServerError)
 		log.Print(err.Error())
 		return
 	}
@@ -79,26 +80,26 @@ func (e *Endpoint) PostAPI(w http.ResponseWriter, r *http.Request) {
 	req := map[string]string{}
 	err = json.Unmarshal(bodyStr, &req)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	retStatus := http.StatusCreated
 	shortURL, err := e.s.Post(r.Context(), req[config.PostAPIreqTag])
-	if err != nil && !errors.Is(err, config.ErrDuplicateURL) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
-		return
-	} else if errors.Is(err, config.ErrDuplicateURL) {
-		retStatus = http.StatusConflict
+	if err != nil {
+		switch {
+		default:
+			http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+			return
+		case errors.Is(err, config.ErrDuplicateURL):
+			retStatus = http.StatusConflict
+		}
 	}
 
 	res := map[string]string{config.PostAPIresTag: shortURL}
 	buf, err := json.Marshal(res)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(" Error: %v", err)))
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
