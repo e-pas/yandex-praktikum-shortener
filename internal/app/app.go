@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -45,7 +46,7 @@ func New() (*App, error) {
 	a.r.Post("/api/shorten/batch", a.e.PostBatchAPI)
 	a.r.Delete("/api/user/urls", a.e.DeleteBatch)
 
-	return a, a.s.PingDB(nil)
+	return a, a.s.PingDB(context.Background())
 }
 
 func (a *App) Run() error {

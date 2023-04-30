@@ -44,10 +44,10 @@ func New() *Config {
 		flag.StringVar(&c.HostName, "b", "http://localhost:8080", "Host name in short URL")
 	}
 	if c.FileStorage == "" {
-		flag.StringVar(&c.FileStorage, "f", "test.stor", "File to store. If omitted no files will created")
+		flag.StringVar(&c.FileStorage, "f", "", "File to store. If omitted no files will created")
 	}
 	if c.PgConnString == "" {
-		flag.StringVar(&c.PgConnString, "d", "postgres://postgres:qetuo@localhost:5432/test", "Postgres connect URL")
+		flag.StringVar(&c.PgConnString, "d", "", "Postgres connect URL")
 	}
 	if c.LenShortURL == 0 {
 		flag.IntVar(&c.LenShortURL, "l", 5, "Length of short address")
