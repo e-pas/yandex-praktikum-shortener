@@ -13,11 +13,12 @@ import (
 	"time"
 
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var pairs []config.ShortURL
+var pairs []model.ShortURL
 
 const pairnum int = 100
 
@@ -34,7 +35,7 @@ func initTest(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	for ik := 0; ik < pairnum; ik++ {
-		pairs = append(pairs, config.ShortURL{
+		pairs = append(pairs, model.ShortURL{
 			URL: fmt.Sprintf("http://%s.%s", generateRandStr(20), generateRandStr(3)),
 		})
 	}

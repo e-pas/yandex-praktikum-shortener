@@ -1,11 +1,11 @@
-package saver
+package repository
 
 import (
 	"context"
 	"encoding/json"
 	"os"
 
-	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/model"
 )
 
 type diskSaver struct {
@@ -22,7 +22,7 @@ func newDiskSaver(filename string) *diskSaver {
 	}
 }
 
-func (ds *diskSaver) Save(ctx context.Context, data *config.ShortURL) error {
+func (ds *diskSaver) Save(ctx context.Context, data model.ShortURL) error {
 	if err := ds.openFile(); err != nil {
 		return err
 	}
@@ -34,16 +34,20 @@ func (ds *diskSaver) Save(ctx context.Context, data *config.ShortURL) error {
 	return nil
 }
 
-func (ds *diskSaver) SaveBatch(ctx context.Context, data map[string]*config.ShortURL) error {
+func (ds *diskSaver) SaveBatch(ctx context.Context, data []*model.ShortURL) error {
 	for _, rec := range data {
-		if err := ds.Save(ctx, rec); err != nil {
+		if err := ds.Save(ctx, *rec); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (ds *diskSaver) Load(ctx context.Context, data map[string]*config.ShortURL) error {
+func (ds *diskSaver) UpdateBatch(ctx context.Context, data []*model.ShortURL) error {
+	return ds.SaveBatch(ctx, data)
+}
+
+func (ds *diskSaver) Load(ctx context.Context, data map[string]*model.ShortURL) error {
 	if err := ds.openFile(); err != nil {
 		return err
 	}
@@ -51,8 +55,8 @@ func (ds *diskSaver) Load(ctx context.Context, data map[string]*config.ShortURL)
 
 	decoder := json.NewDecoder(ds.file)
 	for decoder.More() {
-		shortRec := &config.ShortURL{}
-		if err := decoder.Decode(shortRec); err != nil {
+		shortRec := &model.ShortURL{}
+		if err := decoder.Decode(&shortRec); err != nil {
 			return err
 		}
 		data[shortRec.Short] = shortRec

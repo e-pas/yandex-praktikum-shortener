@@ -23,6 +23,7 @@ type servicer interface {
 	PostBatch(ctx context.Context, URLs []map[string]string) ([]map[string]string, error)
 	Get(ID string) (string, error)
 	GetURLByUser(userID string) []map[string]string
+	DeleteURLs(ctx context.Context, shorts []string) error
 	PingDB(ctx context.Context) error
 	GetLen() int
 }
@@ -38,7 +39,12 @@ func (e *Endpoint) Get(w http.ResponseWriter, r *http.Request) {
 	urlID := chi.URLParam(r, "id")
 	longURL, err := e.s.Get(urlID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+		switch {
+		case errors.Is(err, config.ErrURLDeleted):
+			http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusGone)
+		default:
+			http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+		}
 		log.Printf(" Error: %v", err)
 		return
 	}
@@ -134,6 +140,29 @@ func (e *Endpoint) PostBatchAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(buf)
+}
+
+func (e *Endpoint) DeleteBatch(w http.ResponseWriter, r *http.Request) {
+	bodyStr, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	req := make([]string, 0)
+	err = json.Unmarshal(bodyStr, &req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(" Error: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	err = e.s.DeleteURLs(r.Context(), req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(" Error(s): %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (e *Endpoint) ShowURLByUser(w http.ResponseWriter, r *http.Request) {

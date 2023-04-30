@@ -42,8 +42,8 @@ func UserID(next http.Handler) http.Handler {
 			}
 			userID, isCookieOk = unsignString(userIDcrypt)
 		}
-		if !isCookieOk {
 
+		if !isCookieOk {
 			userID, err = getNewUserID(16)
 			if err != nil {
 				log.Printf("Error in rand: %v\n", err)

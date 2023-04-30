@@ -2,26 +2,29 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
-	"github.com/e-pas/yandex-praktikum-shortener/internal/app/saver"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/model"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/repository"
 )
 
 type Service struct {
 	c    *config.Config
-	ds   *saver.Saver
-	urls map[string]*config.ShortURL
+	ds   *repository.Repository
+	urls map[string]*model.ShortURL
 }
 
 // Constructor
-func New(ds *saver.Saver, c *config.Config) *Service {
+func New(ds *repository.Repository, c *config.Config) *Service {
 	s := &Service{}
 	s.c = c
 	s.ds = ds
-	s.urls = make(map[string]*config.ShortURL, 0)
+	s.urls = make(map[string]*model.ShortURL, 0)
 	ds.Load(context.Background(), s.urls)
 	return s
 }
@@ -42,13 +45,16 @@ func (s *Service) Post(ctx context.Context, URL string) (string, error) {
 			return "", config.ErrNoFreeIDs
 		}
 
-		newURL := &config.ShortURL{
-			URL:    URL,
-			Short:  short,
-			UserID: userID,
+		newURL := &model.ShortURL{
+			URL:     URL,
+			Short:   short,
+			UserID:  userID,
+			Deleted: false,
+		}
+		if err := s.ds.Save(ctx, *newURL); err != nil {
+			return "", err
 		}
 		s.urls[newURL.Short] = newURL
-		s.ds.Save(ctx, newURL)
 	}
 
 	if s.c.RetShrtWHost {
@@ -71,8 +77,8 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 	if s.c.RetShrtWHost {
 		hostName = s.c.HostName
 	}
-	createdURLs := make(map[string]*config.ShortURL) // store map for new records
-	res := make([]map[string]string, 0)              // map with result for browse
+	createdURLs := make([]*model.ShortURL, 0) // store slice for new records
+	res := make([]map[string]string, 0)       // map with result for browse
 	for _, URL := range URLs {
 		short, isCreated := s.findOrCreateShort(URL["original_url"])
 		if isCreated {
@@ -80,12 +86,13 @@ func (s *Service) PostBatch(ctx context.Context, URLs []map[string]string) ([]ma
 				return nil, config.ErrNoFreeIDs
 			}
 
-			newURL := &config.ShortURL{
-				URL:    URL["original_url"],
-				Short:  short,
-				UserID: userID,
+			newURL := &model.ShortURL{
+				URL:     URL["original_url"],
+				Short:   short,
+				UserID:  userID,
+				Deleted: false,
 			}
-			createdURLs[newURL.Short] = newURL
+			createdURLs = append(createdURLs, newURL)
 		}
 		rec := make(map[string]string)
 		rec["correlation_id"] = URL["correlation_id"]
@@ -108,6 +115,9 @@ func (s *Service) Get(ID string) (string, error) {
 	recURL, ok := s.urls[ID]
 	if !ok {
 		return "", config.ErrNoSuchRecord
+	}
+	if recURL.Deleted {
+		return "", config.ErrURLDeleted
 	}
 	return recURL.URL, nil
 }
@@ -185,4 +195,46 @@ func isURLok(URL string) bool {
 		return false
 	}
 	return true
+}
+
+func markDeleted(ctx context.Context, URL *model.ShortURL, mu *sync.RWMutex) error {
+	userID := ctx.Value(config.ContextKeyUserID).(string)
+	if userID == URL.UserID {
+		mu.Lock()
+		defer mu.Unlock()
+		if URL.Deleted {
+			return fmt.Errorf("link %s already deleted ", URL.Short)
+		}
+		URL.Deleted = true
+	} else {
+		return fmt.Errorf("can't delete %s. only owner can ", URL.Short)
+	}
+	return nil
+}
+
+func (s *Service) DeleteURLs(ctx context.Context, shorts []string) error {
+	shortURLs := make([]*model.ShortURL, 0)
+	for _, short := range shorts {
+		url, err := url.Parse(short)
+		if err != nil {
+			return err
+		}
+		str := strings.TrimPrefix(url.Path, "/")
+		shortURL := s.urls[str]
+		shortURLs = append(shortURLs, shortURL)
+	}
+	proc := NewProcessor(ctx, markDeleted)
+	errs := proc.ProceedWith(shortURLs)
+	if len(errs) > 0 {
+		res := ""
+		for _, errv := range errs {
+			res = fmt.Sprintf("%s\n%s", res, errv.Error())
+		}
+		return fmt.Errorf(res)
+	}
+	err := s.ds.UpdateBatch(ctx, shortURLs)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -44,7 +44,7 @@ func New() *Config {
 		flag.StringVar(&c.HostName, "b", "http://localhost:8080", "Host name in short URL")
 	}
 	if c.FileStorage == "" {
-		flag.StringVar(&c.FileStorage, "f", "", "File to store. If omitted no files will created")
+		flag.StringVar(&c.FileStorage, "f", "test.stor", "File to store. If omitted no files will created")
 	}
 	if c.PgConnString == "" {
 		flag.StringVar(&c.PgConnString, "d", "postgres://postgres:qetuo@localhost:5432/test", "Postgres connect URL")
@@ -59,12 +59,6 @@ func New() *Config {
 	return c
 }
 
-type ShortURL struct {
-	Short  string `json:"SHORT"`
-	URL    string `json:"URL"`
-	UserID string `json:"USERID"`
-}
-
 var (
 	ErrNoSuchRecord      = errors.New("no such record")
 	ErrInvalidReqBody    = errors.New("invalid request body")
@@ -74,4 +68,5 @@ var (
 	ErrInvalidGZip       = errors.New("error in gzipped request")
 	ErrNoAttachedStorage = errors.New("no attached storage")
 	ErrDuplicateURL      = errors.New("duplicate url")
+	ErrURLDeleted        = errors.New("deleted url")
 )

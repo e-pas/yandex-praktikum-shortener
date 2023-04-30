@@ -7,7 +7,7 @@ import (
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/config"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/endpoint"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/mware"
-	"github.com/e-pas/yandex-praktikum-shortener/internal/app/saver"
+	"github.com/e-pas/yandex-praktikum-shortener/internal/app/repository"
 	"github.com/e-pas/yandex-praktikum-shortener/internal/app/service"
 
 	"github.com/go-chi/chi/middleware"
@@ -16,7 +16,7 @@ import (
 
 type App struct {
 	c  *config.Config
-	ds *saver.Saver
+	ds *repository.Repository
 	s  *service.Service
 	e  *endpoint.Endpoint
 	r  chi.Router
@@ -25,7 +25,7 @@ type App struct {
 func New() (*App, error) {
 	a := &App{}
 	a.c = config.New()
-	a.ds = saver.New(a.c)
+	a.ds = repository.New(a.c)
 	a.s = service.New(a.ds, a.c)
 	a.e = endpoint.New(a.s, a.c)
 	a.r = chi.NewRouter()
@@ -36,19 +36,21 @@ func New() (*App, error) {
 	a.r.Use(mware.GunzipRequest)
 	a.r.Use(mware.UserID)
 
+	a.r.Get("/ping", a.e.Ping)
 	a.r.Get("/{id}", a.e.Get)
 	a.r.Get("/api/user/urls", a.e.ShowURLByUser)
 	a.r.Get("/info", a.e.Info)
 	a.r.Post("/", a.e.Post)
 	a.r.Post("/api/shorten", a.e.PostAPI)
 	a.r.Post("/api/shorten/batch", a.e.PostBatchAPI)
-	a.r.Get("/ping", a.e.Ping)
+	a.r.Delete("/api/user/urls", a.e.DeleteBatch)
 
-	return a, nil
+	return a, a.s.PingDB(nil)
 }
 
 func (a *App) Run() error {
 	log.Println("service running")
+
 	err := http.ListenAndServe(a.c.Listen, a.r)
 	return err
 }
