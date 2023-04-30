@@ -65,5 +65,5 @@ func (s *Repository) Ping(ctx context.Context) error {
 	if s.ms != nil {
 		return s.ms.Ping(ctx)
 	}
-	return config.ErrNoAttachedStorage
+	return nil
 }

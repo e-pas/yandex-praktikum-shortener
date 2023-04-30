@@ -60,13 +60,12 @@ func New() *Config {
 }
 
 var (
-	ErrNoSuchRecord      = errors.New("no such record")
-	ErrInvalidReqBody    = errors.New("invalid request body")
-	ErrEmptyReqBody      = errors.New("empty request body")
-	ErrURLNotCorrect     = errors.New("given url is not correct")
-	ErrNoFreeIDs         = errors.New("no free short url")
-	ErrInvalidGZip       = errors.New("error in gzipped request")
-	ErrNoAttachedStorage = errors.New("no attached storage")
-	ErrDuplicateURL      = errors.New("duplicate url")
-	ErrURLDeleted        = errors.New("deleted url")
+	ErrNoSuchRecord   = errors.New("no such record")
+	ErrInvalidReqBody = errors.New("invalid request body")
+	ErrEmptyReqBody   = errors.New("empty request body")
+	ErrURLNotCorrect  = errors.New("given url is not correct")
+	ErrNoFreeIDs      = errors.New("no free short url")
+	ErrInvalidGZip    = errors.New("error in gzipped request")
+	ErrDuplicateURL   = errors.New("duplicate url")
+	ErrURLDeleted     = errors.New("deleted url")
 )
