@@ -116,7 +116,6 @@ func (p *Processor) ProceedWith(jobs []*model.ShortURL) []error {
 	errwg.Add(1)
 	go func() {
 		for e := range errCh {
-			log.Println(e)
 			res = append(res, e)
 		}
 		errwg.Done()

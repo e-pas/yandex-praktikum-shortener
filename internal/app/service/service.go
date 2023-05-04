@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -223,18 +224,15 @@ func (s *Service) DeleteURLs(ctx context.Context, shorts []string) error {
 		shortURL := s.urls[str]
 		shortURLs = append(shortURLs, shortURL)
 	}
-	proc := NewProcessor(ctx, markDeleted)
-	errs := proc.ProceedWith(shortURLs)
-	if len(errs) > 0 {
-		res := ""
-		for _, errv := range errs {
-			res = fmt.Sprintf("%s\n%s", res, errv.Error())
+	go func() {
+		proc := NewProcessor(ctx, markDeleted)
+		errs := proc.ProceedWith(shortURLs)
+		if len(errs) > 0 {
+			for _, errv := range errs {
+				log.Printf(" error deleting url: %s\n", errv.Error())
+			}
 		}
-		return fmt.Errorf(res)
-	}
-	err := s.ds.UpdateBatch(ctx, shortURLs)
-	if err != nil {
-		return err
-	}
+		s.ds.UpdateBatch(ctx, shortURLs)
+	}()
 	return nil
 }
